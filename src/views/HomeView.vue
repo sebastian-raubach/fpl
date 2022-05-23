@@ -19,30 +19,33 @@
     <b-row>
       <b-col cols=12 md=4 class="mb-3">
         <b-card class="h-100" v-if="highestTransfer">
-          <b-card-title><BIconCashCoin /> Highest transfer costs</b-card-title>
+          <b-card-title><BIconCashCoin /> Highest extra transfer costs</b-card-title>
           <b-card-sub-title>{{ highestTransfer.name }}</b-card-sub-title>
           Transfer costs: {{ highestTransfer.transfer }}
         </b-card>
       </b-col>
       <b-col cols=12 md=4 class="mb-3">
         <b-card class="h-100" v-if="efficientTransfer">
-          <b-card-title><BIconGraphUp /> Most efficient transfers</b-card-title>
+          <b-card-title><BIconGraphUp /> Most efficient extra transfers</b-card-title>
           <b-card-sub-title>{{ efficientTransfer.name }}</b-card-sub-title>
           Points per transfer cost: {{ efficientTransfer.ratio.toFixed(2) }}
         </b-card>
       </b-col>
       <b-col cols=12 md=4 class="mb-3">
         <b-card class="h-100" v-if="unefficientTransfer">
-          <b-card-title><BIconGraphDown /> Least efficient transfers</b-card-title>
+          <b-card-title><BIconGraphDown /> Least efficient extra transfers</b-card-title>
           <b-card-sub-title>{{ unefficientTransfer.name }}</b-card-sub-title>
           Points per transfer cost: {{ unefficientTransfer.ratio.toFixed(2) }}
         </b-card>
       </b-col>
+      <b-col cols=12>
+        <small class="text-muted">The transfer stats are based on non-free transfers only, i.e. those exceeding the allowed number of free transfers.</small>
+      </b-col>
     </b-row>
 
-    <h1>Standings over time</h1>
+    <h1 class="mt-3">Standings over time</h1>
     <div id="ranking" />
-    <h1>Points over time</h1>
+    <h1 class="mt-3">Points over time</h1>
     <div id="points" />
   </div>
 </template>
