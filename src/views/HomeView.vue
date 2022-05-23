@@ -12,7 +12,7 @@
         <b-card class="h-100" v-if="highestScore">
           <b-card-title><BIconArrowUpCircle /> Highest single game score</b-card-title>
           <b-card-sub-title>{{ highestScore.name }}</b-card-sub-title>
-          Points: {{ highestScore.points }}
+          Points: {{ highestScore.points }} in GW {{ highestScore.gw }}
         </b-card>
       </b-col>
     </b-row>
@@ -32,10 +32,10 @@
         </b-card>
       </b-col>
       <b-col cols=12 md=4 class="mb-3">
-        <b-card class="h-100" v-if="unefficientTransfer">
+        <b-card class="h-100" v-if="inefficientTransfer">
           <b-card-title><BIconGraphDown /> Least efficient extra transfers</b-card-title>
-          <b-card-sub-title>{{ unefficientTransfer.name }}</b-card-sub-title>
-          Points per transfer cost: {{ unefficientTransfer.ratio.toFixed(2) }}
+          <b-card-sub-title>{{ inefficientTransfer.name }}</b-card-sub-title>
+          Points per transfer cost: {{ inefficientTransfer.ratio.toFixed(2) }}
         </b-card>
       </b-col>
       <b-col cols=12>
@@ -92,9 +92,17 @@ export default {
     highestScore: function () {
       if (this.parsedData) {
         const result = this.parsedData.concat().sort((a, b) => Math.max(...b.points) - Math.max(...a.points))[0]
+        const points = result.points.map((p, i) => {
+          return {
+            p: p,
+            gw: i + 1
+          }
+        })
+        points.sort((a, b) => b.p - a.p)
         return {
           name: result.name,
-          points: Math.max(...result.points)
+          points: points[0].p,
+          gw: points[0].gw
         }
       } else {
         return null
@@ -122,7 +130,7 @@ export default {
         return null
       }
     },
-    unefficientTransfer: function () {
+    inefficientTransfer: function () {
       if (this.parsedData) {
         const result = this.parsedData.concat().filter(a => a.transfer).sort((a, b) => (a.cumulative[a.cumulative.length - 1] / a.transfer) - (b.cumulative[b.cumulative.length - 1] / b.transfer))[0]
         return {
@@ -228,8 +236,6 @@ export default {
         displaylogo: false
       }
 
-      console.log(traces)
-
       Plotly.newPlot('points', traces, layout, config)
     },
     updateRanking: function () {
@@ -281,8 +287,6 @@ export default {
         responsive: true,
         displaylogo: false
       }
-
-      console.log(traces)
 
       Plotly.newPlot('ranking', traces, layout, config)
     }
