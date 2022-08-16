@@ -75,12 +75,22 @@ export default {
       default: 2022
     }
   },
-  data: function () {
-    return {
-      gameweeks: Array.from(Array(38).keys()).map(i => i + 1)
-    }
-  },
   computed: {
+    gameweeks: function () {
+      if (this.rawData) {
+        let max = 0
+        for (let i = 1; i < Object.keys(this.rawData[0]).length - 1; i++) {
+          const weekHasData = this.rawData.map(r => r[i]).filter(r => r !== '').length > 0
+          if (weekHasData) {
+            max++
+          }
+        }
+        // return Array.from(Array(Object.keys(this.rawData[0]).length - 2).keys()).map(i => i + 1)
+        return Array.from(Array(max).keys()).map(i => i + 1)
+      } else {
+        return 0
+      }
+    },
     rawData: function () {
       if (this.yearEnd) {
         return d3Dsv.tsvParse(require(`@/assets/data-${this.yearEnd}.txt`).default)
