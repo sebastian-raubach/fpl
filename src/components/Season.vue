@@ -72,7 +72,7 @@ export default {
   props: {
     yearEnd: {
       type: Number,
-      default: 2022
+      default: 2023
     }
   },
   computed: {
@@ -85,7 +85,6 @@ export default {
             max++
           }
         }
-        // return Array.from(Array(Object.keys(this.rawData[0]).length - 2).keys()).map(i => i + 1)
         return Array.from(Array(max).keys()).map(i => i + 1)
       } else {
         return 0
