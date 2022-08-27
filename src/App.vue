@@ -7,7 +7,7 @@
     </b-navbar>
 
     <b-container class="my-3">
-      <b-jumbotron header="Hutt One">
+      <b-jumbotron header="Hutt One" class="banner">
       </b-jumbotron>
 
       <router-view/>
@@ -16,8 +16,15 @@
 </template>
 
 <style lang="scss">
+$primary: #009432;
 @import '~bootswatch/dist/materia/variables';
 @import '~bootstrap/scss/bootstrap';
 @import '~bootstrap-vue/src/index.scss';
 @import '~bootswatch/dist/materia/bootswatch';
+
+.banner {
+  background-image: url('~@/assets/banner-bg.jpg');
+  background-position: center right;
+  color: white
+}
 </style>
