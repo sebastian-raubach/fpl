@@ -9,10 +9,40 @@
         </b-card>
       </b-col>
       <b-col cols=12 md=4 class="mb-3">
+        <b-card class="h-100" v-if="bestImprovement">
+          <b-card-title><BIconChevronDoubleUp /> Best improvement</b-card-title>
+          <b-card-sub-title>{{ bestImprovement.name }}</b-card-sub-title>
+          Correlation gradient: {{ bestImprovement.gradient.toFixed(2) }}
+        </b-card>
+      </b-col>
+      <b-col cols=12 md=4 class="mb-3">
+        <b-card class="h-100" v-if="worstImprovement">
+          <b-card-title><BIconChevronDoubleDown /> Worst improvement</b-card-title>
+          <b-card-sub-title>{{ worstImprovement.name }}</b-card-sub-title>
+          Correlation gradient: {{ worstImprovement.gradient.toFixed(2) }}
+        </b-card>
+      </b-col>
+    </b-row>
+    <b-row>
+      <b-col cols=12 md=4 class="mb-3">
+        <b-card class="h-100" v-if="bestAverageTeam">
+          <b-card-title><BIconAlignTop /> Highest average standing</b-card-title>
+          <b-card-sub-title>{{ bestAverageTeam.name }}</b-card-sub-title>
+          Avg. standing: {{ bestAverageTeam.avgPosition.toFixed(2) }}
+        </b-card>
+      </b-col>
+      <b-col cols=12 md=4 class="mb-3">
         <b-card class="h-100" v-if="highestScore">
           <b-card-title><BIconArrowUpCircle /> Highest single game score</b-card-title>
           <b-card-sub-title>{{ highestScore.name }}</b-card-sub-title>
           Points: {{ highestScore.points }} in GW {{ highestScore.gw }}
+        </b-card>
+      </b-col>
+      <b-col cols=12 md=4 class="mb-3">
+        <b-card class="h-100" v-if="lowestScore">
+          <b-card-title><BIconArrowDownCircle /> Lowest single game score</b-card-title>
+          <b-card-sub-title>{{ lowestScore.name }}</b-card-sub-title>
+          Points: {{ lowestScore.points }} in GW {{ lowestScore.gw }}
         </b-card>
       </b-col>
     </b-row>
@@ -51,7 +81,8 @@
 </template>
 
 <script>
-import { BIconAward, BIconCashCoin, BIconGraphUp, BIconArrowUpCircle, BIconGraphDown } from 'bootstrap-vue'
+import { BIconAward, BIconCashCoin, BIconGraphUp, BIconAlignTop, BIconArrowUpCircle, BIconChevronDoubleDown, BIconArrowDownCircle, BIconChevronDoubleUp, BIconGraphDown } from 'bootstrap-vue'
+import regression from 'regression'
 
 const d3Dsv = require('d3-dsv')
 const Plotly = require('plotly.js/lib/core')
@@ -66,8 +97,12 @@ export default {
     BIconAward,
     BIconCashCoin,
     BIconGraphUp,
+    BIconChevronDoubleUp,
+    BIconChevronDoubleDown,
     BIconGraphDown,
-    BIconArrowUpCircle
+    BIconArrowUpCircle,
+    BIconAlignTop,
+    BIconArrowDownCircle
   },
   props: {
     yearEnd: {
@@ -109,6 +144,81 @@ export default {
         return null
       }
     },
+    worstImprovement: function () {
+      if (this.parsedData && this.rankingPerDay) {
+        const teamToIndex = {}
+        this.parsedData.forEach((t, i) => {
+          teamToIndex[t.name] = i
+        })
+        const result = this.parsedData.concat().sort((a, b) => {
+          const ad = this.rankingPerDay[teamToIndex[a.name]].map((v, day) => [day, v + 1])
+          const bd = this.rankingPerDay[teamToIndex[b.name]].map((v, day) => [day, v + 1])
+
+          const gradA = regression.linear(ad)
+          const gradB = regression.linear(bd)
+
+          a.gradient = gradA.equation[0]
+          b.gradient = gradB.equation[0]
+
+          return a.gradient - b.gradient
+        })[0]
+        return {
+          name: result.name,
+          gradient: result.gradient
+        }
+      } else {
+        return null
+      }
+    },
+    bestImprovement: function () {
+      if (this.parsedData && this.rankingPerDay) {
+        const teamToIndex = {}
+        this.parsedData.forEach((t, i) => {
+          teamToIndex[t.name] = i
+        })
+        const result = this.parsedData.concat().sort((a, b) => {
+          const ad = this.rankingPerDay[teamToIndex[a.name]].map((v, day) => [day, v + 1])
+          const bd = this.rankingPerDay[teamToIndex[b.name]].map((v, day) => [day, v + 1])
+
+          const gradA = regression.linear(ad)
+          const gradB = regression.linear(bd)
+
+          a.gradient = gradA.equation[0]
+          b.gradient = gradB.equation[0]
+
+          return b.gradient - a.gradient
+        })[0]
+        return {
+          name: result.name,
+          gradient: result.gradient
+        }
+      } else {
+        return null
+      }
+    },
+    bestAverageTeam: function () {
+      if (this.parsedData && this.rankingPerDay) {
+        const teamToIndex = {}
+        this.parsedData.forEach((t, i) => {
+          teamToIndex[t.name] = i
+        })
+        const result = this.parsedData.concat().sort((a, b) => {
+          const ad = this.rankingPerDay[teamToIndex[a.name]].map(v => this.parsedData.length - v)
+          const bd = this.rankingPerDay[teamToIndex[b.name]].map(v => this.parsedData.length - v)
+
+          a.avgPosition = this.avg(ad)
+          b.avgPosition = this.avg(bd)
+
+          return a.avgPosition - b.avgPosition
+        })[0]
+        return {
+          name: result.name,
+          avgPosition: result.avgPosition
+        }
+      } else {
+        return null
+      }
+    },
     highestScore: function () {
       if (this.parsedData) {
         const result = this.parsedData.concat().sort((a, b) => Math.max(...b.points) - Math.max(...a.points))[0]
@@ -119,6 +229,25 @@ export default {
           }
         })
         points.sort((a, b) => b.p - a.p)
+        return {
+          name: result.name,
+          points: points[0].p,
+          gw: points[0].gw
+        }
+      } else {
+        return null
+      }
+    },
+    lowestScore: function () {
+      if (this.parsedData) {
+        const result = this.parsedData.concat().sort((a, b) => Math.min(...a.points.filter(p => p !== 0)) - Math.min(...b.points.filter(p => p !== 0)))[0]
+        const points = result.points.map((p, i) => {
+          return {
+            p: p,
+            gw: i + 1
+          }
+        })
+        points.sort((a, b) => a.p - b.p)
         return {
           name: result.name,
           points: points[0].p,
@@ -215,6 +344,9 @@ export default {
     }
   },
   methods: {
+    avg: function (arr) {
+      return arr.reduce((a, b) => a + b) / arr.length
+    },
     updatePoints: function () {
       const traces = this.parsedData.map(r => {
         const x = []
@@ -236,16 +368,20 @@ export default {
       traces.sort((a, b) => b.y[b.y.length - 1] - a.y[a.y.length - 1])
 
       const layout = {
-        height: 600,
+        height: Math.max(400, this.parsedData.length * 30 + 50),
+        margin: { l: 0, t: 0, r: 0, b: 40 },
         xaxis: {
           automargin: true,
           showgrid: false,
-          title: { text: 'Gameweek' }
+          title: { text: 'Gameweek' },
+          tickmode: 'linear',
+          tick0: 1,
+          dtick: 1
         },
         yaxis: {
           automargin: true,
-          showgrid: true,
-          title: { text: 'Cumulative Points' }
+          showgrid: true
+          // title: { text: 'Cumulative Points' }
         },
         hovermode: 'x',
         legend: {
@@ -287,15 +423,19 @@ export default {
 
       const layout = {
         height: Math.max(400, this.parsedData.length * 30 + 50),
+        margin: { l: 0, t: 0, r: 0, b: 40 },
         xaxis: {
           automargin: true,
           showgrid: false,
-          title: { text: 'Gameweek' }
+          title: { text: 'Gameweek' },
+          tickmode: 'linear',
+          tick0: 1,
+          dtick: 1
         },
         yaxis: {
           automargin: true,
-          showgrid: false,
-          title: { text: 'Standings' },
+          showgrid: true,
+          // title: { text: 'Standings' },
           tickvals: Array.from(Array(this.parsedData.length).keys()),
           ticktext: Array.from(Array(this.parsedData.length).keys()).map(i => this.parsedData.length - i)
         },
