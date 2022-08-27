@@ -373,10 +373,7 @@ export default {
         xaxis: {
           automargin: true,
           showgrid: false,
-          title: { text: 'Gameweek' },
-          tickmode: 'linear',
-          tick0: 1,
-          dtick: 1
+          title: { text: 'Gameweek' }
         },
         yaxis: {
           automargin: true,
@@ -427,10 +424,7 @@ export default {
         xaxis: {
           automargin: true,
           showgrid: false,
-          title: { text: 'Gameweek' },
-          tickmode: 'linear',
-          tick0: 1,
-          dtick: 1
+          title: { text: 'Gameweek' }
         },
         yaxis: {
           automargin: true,
