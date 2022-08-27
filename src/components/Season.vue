@@ -12,14 +12,14 @@
         <b-card class="h-100" v-if="bestImprovement">
           <b-card-title><BIconChevronDoubleUp /> Best improvement</b-card-title>
           <b-card-sub-title>{{ bestImprovement.name }}</b-card-sub-title>
-          Correlation gradient: {{ bestImprovement.gradient.toFixed(2) }}
+          Regression gradient: {{ bestImprovement.gradient.toFixed(2) }}
         </b-card>
       </b-col>
       <b-col cols=12 md=4 class="mb-3">
         <b-card class="h-100" v-if="worstImprovement">
           <b-card-title><BIconChevronDoubleDown /> Worst improvement</b-card-title>
           <b-card-sub-title>{{ worstImprovement.name }}</b-card-sub-title>
-          Correlation gradient: {{ worstImprovement.gradient.toFixed(2) }}
+          Regression gradient: {{ worstImprovement.gradient.toFixed(2) }}
         </b-card>
       </b-col>
     </b-row>
@@ -373,11 +373,13 @@ export default {
         xaxis: {
           automargin: true,
           showgrid: false,
-          title: { text: 'Gameweek' }
+          title: { text: 'Gameweek' },
+          fixedrange: true
         },
         yaxis: {
           automargin: true,
-          showgrid: true
+          showgrid: true,
+          fixedrange: true
           // title: { text: 'Cumulative Points' }
         },
         hovermode: 'x',
@@ -424,14 +426,16 @@ export default {
         xaxis: {
           automargin: true,
           showgrid: false,
-          title: { text: 'Gameweek' }
+          title: { text: 'Gameweek' },
+          fixedrange: true
         },
         yaxis: {
           automargin: true,
           showgrid: true,
           // title: { text: 'Standings' },
           tickvals: Array.from(Array(this.parsedData.length).keys()),
-          ticktext: Array.from(Array(this.parsedData.length).keys()).map(i => this.parsedData.length - i)
+          ticktext: Array.from(Array(this.parsedData.length).keys()).map(i => this.parsedData.length - i),
+          fixedrange: true
         },
         hovermode: 'x',
         legend: {
