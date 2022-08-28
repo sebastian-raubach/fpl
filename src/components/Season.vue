@@ -77,6 +77,18 @@
     <div :id="`ranking-${yearEnd}`" />
     <h1 class="mt-3">Points over time</h1>
     <div :id="`points-${yearEnd}`" />
+
+    <h1>Statistics table</h1>
+    <b-table hover striped responsive :items="parsedData" :fields="columns">
+      <template v-slot:cell(name)="data">
+        <span>{{ data.item.name }}</span>
+      </template>
+      <template v-slot:cell()="data">
+        <div class="text-nowrap">Points: {{data.item.points[data.field.dataIndex]}}</div>
+        <div class="text-nowrap">Cumulative: {{data.item.cumulative[data.field.dataIndex]}}</div>
+        <div class="text-nowrap">Standing: {{parsedData.length - rankingPerDay[data.item.index][data.field.dataIndex]}}</div>
+      </template>
+    </b-table>
   </div>
 </template>
 
@@ -111,6 +123,23 @@ export default {
     }
   },
   computed: {
+    columns: function () {
+      const columns = [{
+        key: 'name',
+        sortable: true,
+        label: 'Team',
+        stickyColumn: true
+      }]
+
+      this.gameweeks.forEach(i => columns.push({
+        key: '' + i,
+        label: '' + i,
+        sortable: false,
+        dataIndex: i - 1
+      }))
+
+      return columns
+    },
     gameweeks: function () {
       if (this.rawData) {
         let max = 0
@@ -294,7 +323,7 @@ export default {
     },
     parsedData: function () {
       if (this.rawData) {
-        return this.rawData.map(r => {
+        return this.rawData.map((r, i) => {
           const points = []
           const cumulative = []
 
@@ -312,6 +341,7 @@ export default {
             points,
             cumulative,
             name: r.Team,
+            index: i,
             transfer: +r['Transfer fees']
           }
         })

@@ -8,7 +8,8 @@ import {
   JumbotronPlugin,
   NavbarPlugin,
   CardPlugin,
-  TabsPlugin
+  TabsPlugin,
+  TablePlugin
 } from 'bootstrap-vue'
 
 Vue.config.productionTip = false
@@ -18,6 +19,7 @@ Vue.use(LayoutPlugin)
 Vue.use(JumbotronPlugin)
 Vue.use(NavbarPlugin)
 Vue.use(TabsPlugin)
+Vue.use(TablePlugin)
 
 new Vue({
   router,
