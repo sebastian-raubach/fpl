@@ -79,21 +79,28 @@
     <div :id="`points-${yearEnd}`" />
 
     <h1>Statistics table</h1>
-    <b-table hover striped responsive :items="parsedData" :fields="columns">
-      <template v-slot:cell(name)="data">
-        <span>{{ data.item.name }}</span>
+    <b-table hover striped responsive sticky-header="75vh" :items="tableData" :fields="columns">
+      <template v-slot:cell(team)="data">
+        <span>{{ data.item.team }}</span>
       </template>
       <template v-slot:cell()="data">
-        <div class="text-nowrap">Points: {{data.item.points[data.field.dataIndex]}}</div>
-        <div class="text-nowrap">Cumulative: {{data.item.cumulative[data.field.dataIndex]}}</div>
-        <div class="text-nowrap">Standing: {{parsedData.length - rankingPerDay[data.item.index][data.field.dataIndex]}}</div>
+        <div class="text-nowrap">Points: {{data.item[`gw${data.field.fieldIndex}`].points}}</div>
+        <div class="text-nowrap">Cumulative: {{data.item[`gw${data.field.fieldIndex}`].cumulative}}</div>
+        <div class="text-nowrap">
+          <span>Standing: {{data.item[`gw${data.field.fieldIndex}`].standing}}</span>
+          <BIconChevronDoubleUp class="ml-1 status-upup" v-if="data.item[`gw${data.field.fieldIndex}`].status === 'upup'" />
+          <BIconChevronUp class="ml-1 status-up" v-if="data.item[`gw${data.field.fieldIndex}`].status === 'up'" />
+          <BIconChevronDoubleDown class="ml-1 status-downdown" v-if="data.item[`gw${data.field.fieldIndex}`].status === 'downdown'" />
+          <BIconChevronDown class="ml-1 status-down" v-if="data.item[`gw${data.field.fieldIndex}`].status === 'down'" />
+          <BIconDot class="ml-1 status-same" v-if="data.item[`gw${data.field.fieldIndex}`].status === 'same'" />
+        </div>
       </template>
     </b-table>
   </div>
 </template>
 
 <script>
-import { BIconAward, BIconCashCoin, BIconGraphUp, BIconAlignTop, BIconArrowUpCircle, BIconChevronDoubleDown, BIconArrowDownCircle, BIconChevronDoubleUp, BIconGraphDown } from 'bootstrap-vue'
+import { BIconAward, BIconCashCoin, BIconGraphUp, BIconChevronUp, BIconChevronDown, BIconDot, BIconAlignTop, BIconArrowUpCircle, BIconChevronDoubleDown, BIconArrowDownCircle, BIconChevronDoubleUp, BIconGraphDown } from 'bootstrap-vue'
 import regression from 'regression'
 
 const d3Dsv = require('d3-dsv')
@@ -109,10 +116,13 @@ export default {
     BIconAward,
     BIconCashCoin,
     BIconGraphUp,
+    BIconDot,
+    BIconChevronDown,
     BIconChevronDoubleUp,
     BIconChevronDoubleDown,
     BIconGraphDown,
     BIconArrowUpCircle,
+    BIconChevronUp,
     BIconAlignTop,
     BIconArrowDownCircle
   },
@@ -125,17 +135,17 @@ export default {
   computed: {
     columns: function () {
       const columns = [{
-        key: 'name',
+        key: 'team',
         sortable: true,
         label: 'Team',
         stickyColumn: true
       }]
 
       this.gameweeks.forEach(i => columns.push({
-        key: '' + i,
-        label: '' + i,
+        key: 'gw' + (i - 1),
+        label: 'GW' + i,
         sortable: false,
-        dataIndex: i - 1
+        fieldIndex: i - 1
       }))
 
       return columns
@@ -157,6 +167,47 @@ export default {
     rawData: function () {
       if (this.yearEnd) {
         return d3Dsv.tsvParse(require(`@/assets/data-${this.yearEnd}.txt`).default)
+      } else {
+        return null
+      }
+    },
+    tableData: function () {
+      if (this.parsedData) {
+        return this.parsedData.map((p, pi) => {
+          const result = {
+            team: p.name
+          }
+
+          this.gameweeks.forEach((g, i) => {
+            let status = null
+            const standing = this.parsedData.length - this.rankingPerDay[pi][i]
+
+            if (i > 0) {
+              const diff = standing - result[`gw${i - 1}`].standing
+
+              if (diff === 0) {
+                status = 'same'
+              } else if (diff > 0 && diff < 3) {
+                status = 'down'
+              } else if (diff >= 3) {
+                status = 'downdown'
+              } else if (diff < 0 && diff > -3) {
+                status = 'up'
+              } else if (diff <= -3) {
+                status = 'upup'
+              }
+            }
+
+            result[`gw${i}`] = {
+              points: p.points[i],
+              cumulative: p.cumulative[i],
+              standing: standing,
+              status: status
+            }
+          })
+
+          return result
+        })
       } else {
         return null
       }
@@ -491,3 +542,21 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.status-down {
+  color: #e74c3c;
+}
+.status-downdown {
+  color: #c0392b;
+}
+.status-up {
+  color: #2ecc71;
+}
+.status-upup {
+  color: #27ae60;
+}
+.status-same {
+  color: #95a5a6;
+}
+</style>
