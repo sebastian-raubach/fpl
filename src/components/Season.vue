@@ -79,7 +79,25 @@
     <div :id="`points-${yearEnd}`" />
 
     <h1>Statistics table</h1>
-    <b-table hover striped responsive sticky-header="75vh" :items="tableData" :fields="columns">
+
+    <b-form-group label="Sort table by" label-for="sort-options">
+      <b-button-group id="sort-options">
+        <b-button v-for="option in sortTableByOptions" :key="`table-sort-by-${option.key}`" :pressed="option.key === sortTableBy" @click="setSortBy(option)">
+          {{ option.text }}
+        </b-button>
+      </b-button-group>
+    </b-form-group>
+    <b-table hover
+             striped
+             responsive
+             :sort-compare="sortTable"
+             :sort-by="`gw${gameweeks.length - 1}`"
+             :sort-desc="false"
+             sort-direction="last"
+             sticky-header="75vh"
+             :items="tableData"
+             :fields="columns"
+             ref="table" >
       <template v-slot:cell(team)="data">
         <span>{{ data.item.team }}</span>
       </template>
@@ -132,6 +150,16 @@ export default {
       default: 2023
     }
   },
+  data: function () {
+    return {
+      sortTableByOptions: [
+        { key: 'standing', text: 'Standing', getValue: (row) => row.standing },
+        { key: 'points', text: 'GW Points', getValue: (row) => row.points },
+        { key: 'cumulative', text: 'Cumulative points', getValue: (row) => row.cumulative }
+      ],
+      sortTableBy: 'standing'
+    }
+  },
   computed: {
     columns: function () {
       const columns = [{
@@ -144,7 +172,7 @@ export default {
       this.gameweeks.forEach(i => columns.push({
         key: 'gw' + (i - 1),
         label: 'GW' + i,
-        sortable: false,
+        sortable: true,
         fieldIndex: i - 1
       }))
 
@@ -425,6 +453,21 @@ export default {
     }
   },
   methods: {
+    setSortBy: function (option) {
+      this.sortTableBy = option.key
+      this.$refs.table.refresh()
+    },
+    sortTable: function (a, b, key) {
+      if (key === 'team') {
+        return a.team.localeCompare(b.team)
+      } else {
+        const op = this.sortTableByOptions.find(o => o.key === this.sortTableBy)
+        const ap = op.getValue(a[key])
+        const bp = op.getValue(b[key])
+
+        return ap === bp ? 0 : Math.sign(ap - bp)
+      }
+    },
     avg: function (arr) {
       return arr.reduce((a, b) => a + b) / arr.length
     },

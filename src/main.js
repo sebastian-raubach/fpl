@@ -4,16 +4,22 @@ import router from './router'
 import store from './store'
 
 import {
+  ButtonPlugin,
+  ButtonGroupPlugin,
   LayoutPlugin,
   JumbotronPlugin,
   NavbarPlugin,
   CardPlugin,
   TabsPlugin,
-  TablePlugin
+  TablePlugin,
+  FormGroupPlugin
 } from 'bootstrap-vue'
 
 Vue.config.productionTip = false
 
+Vue.use(ButtonPlugin)
+Vue.use(ButtonGroupPlugin)
+Vue.use(FormGroupPlugin)
 Vue.use(CardPlugin)
 Vue.use(LayoutPlugin)
 Vue.use(JumbotronPlugin)
