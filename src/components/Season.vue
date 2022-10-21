@@ -73,6 +73,15 @@
       </b-col>
     </b-row>
 
+    <h2 class="mt-3">Highlight selected teams</h2>
+    <b-form-group label="Select teams" label-for="highlight-teams">
+      <b-form-select class="border" id="highlight-teams" :options="teamOptions" multiple :select-size="10" v-model="tempHighlightTeams" />
+    </b-form-group>
+    <b-button-group>
+      <b-button @click="updateHighlightTeams"><BIconArrowClockwise /> Highlight selection</b-button>
+      <b-button @click="clearHighlightTeams"><BIconXCircle /> Reset selection</b-button>
+    </b-button-group>
+
     <h1 class="mt-3">Standings over time</h1>
     <div :id="`ranking-${yearEnd}`" />
     <h1 class="mt-3">Points over time</h1>
@@ -118,7 +127,7 @@
 </template>
 
 <script>
-import { BIconAward, BIconCashCoin, BIconGraphUp, BIconChevronUp, BIconChevronDown, BIconDot, BIconAlignTop, BIconArrowUpCircle, BIconChevronDoubleDown, BIconArrowDownCircle, BIconChevronDoubleUp, BIconGraphDown } from 'bootstrap-vue'
+import { BIconAward, BIconCashCoin, BIconGraphUp, BIconArrowClockwise, BIconXCircle, BIconChevronUp, BIconChevronDown, BIconDot, BIconAlignTop, BIconArrowUpCircle, BIconChevronDoubleDown, BIconArrowDownCircle, BIconChevronDoubleUp, BIconGraphDown } from 'bootstrap-vue'
 import regression from 'regression'
 
 const d3Dsv = require('d3-dsv')
@@ -136,9 +145,11 @@ export default {
     BIconGraphUp,
     BIconDot,
     BIconChevronDown,
+    BIconArrowClockwise,
     BIconChevronDoubleUp,
     BIconChevronDoubleDown,
     BIconGraphDown,
+    BIconXCircle,
     BIconArrowUpCircle,
     BIconChevronUp,
     BIconAlignTop,
@@ -157,10 +168,19 @@ export default {
         { key: 'points', text: 'GW Points', getValue: (row) => row.points },
         { key: 'cumulative', text: 'Cumulative points', getValue: (row) => row.cumulative }
       ],
-      sortTableBy: 'standing'
+      sortTableBy: 'standing',
+      tempHighlightTeams: [],
+      highlightTeams: []
     }
   },
   computed: {
+    teamOptions: function () {
+      if (this.parsedData) {
+        return this.parsedData.map(t => t.name).sort()
+      } else {
+        return []
+      }
+    },
     columns: function () {
       const columns = [{
         key: 'team',
@@ -202,8 +222,14 @@ export default {
     tableData: function () {
       if (this.parsedData) {
         return this.parsedData.map((p, pi) => {
+          const isHighlighted = this.highlightTeams.length > 0 && this.highlightTeams.includes(p.name)
+
           const result = {
             team: p.name
+          }
+
+          if (isHighlighted) {
+            result._rowVariant = 'info'
           }
 
           this.gameweeks.forEach((g, i) => {
@@ -453,6 +479,17 @@ export default {
     }
   },
   methods: {
+    clearHighlightTeams: function () {
+      this.highlightTeams = []
+      this.tempHighlightTeams = []
+      this.updatePoints()
+      this.updateRanking()
+    },
+    updateHighlightTeams: function () {
+      this.highlightTeams = this.tempHighlightTeams.concat()
+      this.updatePoints()
+      this.updateRanking()
+    },
     setSortBy: function (option) {
       this.sortTableBy = option.key
       this.$refs.table.refresh()
@@ -475,21 +512,37 @@ export default {
       const traces = this.parsedData.map(r => {
         const x = []
         const y = []
+        const isHighlighted = this.highlightTeams.length < 1 || this.highlightTeams.includes(r.name)
 
         this.gameweeks.forEach(gw => {
           x.push(gw)
           y.push(r.cumulative[gw - 1])
         })
 
-        return {
+        const trace = {
           x,
           y,
           type: 'scatter',
           name: r.name
         }
+
+        if (!isHighlighted) {
+          trace.line = { color: 'lightgray', opacity: 0.75 }
+          trace.marker = { color: 'lightgray', opacity: 0.75 }
+        }
+
+        return trace
       })
 
-      traces.sort((a, b) => b.y[b.y.length - 1] - a.y[a.y.length - 1])
+      traces.sort((a, b) => {
+        if (a.line && !b.line) {
+          return -1
+        } else if (!a.line && b.line) {
+          return 1
+        } else {
+          return b.y[b.y.length - 1] - a.y[a.y.length - 1]
+        }
+      })
 
       const layout = {
         height: Math.max(400, this.parsedData.length * 30 + 50),
@@ -528,21 +581,38 @@ export default {
         const x = []
         const y = []
 
+        const isHighlighted = this.highlightTeams.length < 1 || this.highlightTeams.includes(r.name)
+
         this.gameweeks.forEach(gw => {
           x.push(gw)
           y.push(this.rankingPerDay[i][gw - 1])
         })
 
-        return {
+        const trace = {
           x,
           y,
           type: 'scatter',
           name: r.name,
           mode: 'lines+markers'
         }
+
+        if (!isHighlighted) {
+          trace.line = { color: 'lightgray', opacity: 0.75 }
+          trace.marker = { color: 'lightgray', opacity: 0.75 }
+        }
+
+        return trace
       })
 
-      traces.sort((a, b) => b.y[b.y.length - 1] - a.y[a.y.length - 1])
+      traces.sort((a, b) => {
+        if (a.line && !b.line) {
+          return -1
+        } else if (!a.line && b.line) {
+          return 1
+        } else {
+          return b.y[b.y.length - 1] - a.y[a.y.length - 1]
+        }
+      })
 
       const layout = {
         height: Math.max(400, this.parsedData.length * 30 + 50),

@@ -12,6 +12,7 @@ import {
   CardPlugin,
   TabsPlugin,
   TablePlugin,
+  FormSelectPlugin,
   FormGroupPlugin
 } from 'bootstrap-vue'
 
@@ -20,6 +21,7 @@ Vue.config.productionTip = false
 Vue.use(ButtonPlugin)
 Vue.use(ButtonGroupPlugin)
 Vue.use(FormGroupPlugin)
+Vue.use(FormSelectPlugin)
 Vue.use(CardPlugin)
 Vue.use(LayoutPlugin)
 Vue.use(JumbotronPlugin)

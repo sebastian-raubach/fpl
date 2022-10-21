@@ -17,6 +17,7 @@
 
 <style lang="scss">
 $primary: #009432;
+$info: #12CBC4;
 @import '~bootswatch/dist/materia/variables';
 @import '~bootstrap/scss/bootstrap';
 @import '~bootstrap-vue/src/index.scss';
